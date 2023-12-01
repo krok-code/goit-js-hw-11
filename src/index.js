@@ -17,6 +17,9 @@ document.getElementById('search-form').addEventListener('submit', async function
   }
 
   try {
+    clearGallery();
+    currentPage = 1;
+    
     const apiKey = '40889822-a67a80a102badb2655179de19';
     const apiUrl = `https://pixabay.com/api/?key=${apiKey}&q=${searchQuery}&image_type=photo&orientation=horizontal&safesearch=true&page=${currentPage}&per_page=${perPage}`;
 
@@ -24,7 +27,7 @@ document.getElementById('search-form').addEventListener('submit', async function
 
     const { hits, totalHits } = response.data;
 
-    if (hits.length === 0) {
+    if (totalHits === 0) {
       Notiflix.Notify.warning('Sorry, there are no images matching your search query. Please try again.');
       return;
     }
@@ -33,27 +36,18 @@ document.getElementById('search-form').addEventListener('submit', async function
 
     Notiflix.Notify.success(`Hooray! We found ${totalHits} images.`);
 
+    updateLightbox();
+    smoothScroll();
+
+    checkImageCount(totalHits);
+
     if (hits.length < perPage) {
       hideLoadMoreButton();
       Notiflix.Notify.info("We're sorry, but you've reached the end of search results.");
     } else {
       showLoadMoreButton();
-    }
+    } 
 
-    if (currentPage * perPage >= totalHits) {
-      hideLoadMoreButton();
-      Notiflix.Notify.info("You've reached the end of available images.");
-    }
-
-    // Очищення галереї при новому запиті
-    if (currentPage === 1) {
-      clearGallery();
-    }
-
-    // Виклик методу refresh бібліотеки SimpleLightbox
-    updateLightbox();
-    // Плавне прокручування сторінки
-    smoothScroll();
   } catch (error) {
     console.error('Error fetching images:', error);
     Notiflix.Notify.failure('An error occurred while fetching images. Please try again.');
@@ -73,8 +67,6 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 });
 
-// Решта коду залишається незмінним
-
 async function fetchAndDisplayImages(searchQuery, page) {
   try {
     const apiKey = '40889822-a67a80a102badb2655179de19';
@@ -83,7 +75,7 @@ async function fetchAndDisplayImages(searchQuery, page) {
     const response = await axios.get(apiUrl);
     const { hits, totalHits } = response.data;
 
-    if (hits.length === 0) {
+    if (!hits || hits.length === 0) {
       Notiflix.Notify.warning('Sorry, there are no more images.');
       hideLoadMoreButton();
       return;
@@ -92,9 +84,19 @@ async function fetchAndDisplayImages(searchQuery, page) {
     displayImages(hits);
     updateLightbox();
     smoothScroll();
+
+    checkImageCount(totalHits);
+
   } catch (error) {
     console.error('Error fetching more images:', error);
     Notiflix.Notify.failure('An error occurred while fetching more images. Please try again.');
+  }
+}
+
+function clearGallery() {
+  const gallery = document.getElementById('gallery');
+  if (gallery) {
+    gallery.innerHTML = '';
   }
 }
 
@@ -102,6 +104,10 @@ function displayImages(images) {
   const gallery = document.getElementById('gallery');
 
   if (gallery) {
+    if (currentPage === 1) {
+      clearGallery();
+    }
+
     images.forEach(image => {
       const photoCard = document.createElement('div');
       photoCard.classList.add('photo-card');
@@ -122,19 +128,19 @@ function displayImages(images) {
 
       const likes = document.createElement('p');
       likes.classList.add('info-item');
-      likes.innerHTML = `<b>Likes</b> ${image.likes}`;
+      likes.innerHTML = `<b>Likes:</b> ${image.likes}`;
 
       const views = document.createElement('p');
       views.classList.add('info-item');
-      views.innerHTML = `<b>Views</b> ${image.views}`;
+      views.innerHTML = `<b>Views:</b> ${image.views}`;
 
       const comments = document.createElement('p');
       comments.classList.add('info-item');
-      comments.innerHTML = `<b>Comments</b> ${image.comments}`;
+      comments.innerHTML = `<b>Comments:</b> ${image.comments}`;
 
       const downloads = document.createElement('p');
       downloads.classList.add('info-item');
-      downloads.innerHTML = `<b>Downloads</b> ${image.downloads}`;
+      downloads.innerHTML = `<b>Downloads:</b> ${image.downloads}`;
 
       info.appendChild(likes);
       info.appendChild(views);
@@ -146,21 +152,23 @@ function displayImages(images) {
 
       gallery.appendChild(photoCard);
     });
-
-    if (currentPage * perPage >= totalHits) {
-      hideLoadMoreButton();
-    }
   } else {
     console.error("Gallery element not found.")
   }
 }
 
 function hideLoadMoreButton() {
-  document.getElementById('load-more').style.display = 'none';
+  const loadMoreButton = document.getElementById('load-more');
+  if (loadMoreButton) {
+    loadMoreButton.style.display = 'none';
+  }
 }
 
 function showLoadMoreButton() {
-  document.getElementById('load-more').style.display = 'block';
+  const loadMoreButton = document.getElementById('load-more');
+  if (loadMoreButton) {
+    loadMoreButton.style.display = 'block';
+  }
 }
 
 function updateLightbox() {
@@ -169,10 +177,21 @@ function updateLightbox() {
 }
 
 function smoothScroll() {
-  const { height: cardHeight } = document.querySelector(".gallery").firstElementChild.getBoundingClientRect();
+  const gallery = document.querySelector(".gallery");
+  
+  if (gallery && gallery.firstElementChild) {
+    const { height: cardHeight } = gallery.firstElementChild.getBoundingClientRect();
 
-  window.scrollBy({
-    top: cardHeight * 2,
-    behavior: "smooth",
-  });
+    window.scrollBy({
+      top: cardHeight * 2,
+      behavior: "smooth",
+    });
+  }
+}
+
+function checkImageCount(totalHits) {
+  if (totalHits <= perPage * currentPage) {
+    hideLoadMoreButton();
+    Notiflix.Notify.info('There are no more images.');
+  }
 }
