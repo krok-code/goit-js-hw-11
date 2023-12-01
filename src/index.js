@@ -128,19 +128,19 @@ function displayImages(images) {
 
       const likes = document.createElement('p');
       likes.classList.add('info-item');
-      likes.innerHTML = `<b>Likes:</b> ${image.likes}`;
+      likes.innerHTML = `<b>Likes</b> ${image.likes}`;
 
       const views = document.createElement('p');
       views.classList.add('info-item');
-      views.innerHTML = `<b>Views:</b> ${image.views}`;
+      views.innerHTML = `<b>Views</b> ${image.views}`;
 
       const comments = document.createElement('p');
       comments.classList.add('info-item');
-      comments.innerHTML = `<b>Comments:</b> ${image.comments}`;
+      comments.innerHTML = `<b>Comments</b> ${image.comments}`;
 
       const downloads = document.createElement('p');
       downloads.classList.add('info-item');
-      downloads.innerHTML = `<b>Downloads:</b> ${image.downloads}`;
+      downloads.innerHTML = `<b>Downloads</b> ${image.downloads}`;
 
       info.appendChild(likes);
       info.appendChild(views);
